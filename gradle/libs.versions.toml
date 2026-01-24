@@ -1,13 +1,13 @@
 [versions]
-agp = "8.13.0"
+agp = "8.13.2"
 annotation = "1.9.1"
-jdk18on = "1.81"
-kotlin = "2.2.10"
+bc-jdk18on = "1.83"
+kotlin = "2.3.0"
 libcxx = "28.1.13356709"
 
 [libraries]
 annotation = { module = "androidx.annotation:annotation", version.ref = "annotation" }
-org-bouncycastle-bcpkix-jdk18on = { module = "org.bouncycastle:bcpkix-jdk18on", version.ref = "jdk18on" }
+org-bouncycastle-bcpkix-jdk18on = { module = "org.bouncycastle:bcpkix-jdk18on", version.ref = "bc-jdk18on" }
 org-lsposed-libcxx-libcxx = { module = "org.lsposed.libcxx:libcxx", version.ref = "libcxx" }
 
 [plugins]
