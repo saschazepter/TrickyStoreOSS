@@ -77,20 +77,14 @@ object Keystore2Interceptor : BaseKeystoreInterceptor() {
         if (code == getKeyEntryTransaction) {
             if (KeyBoxUtils.hasKeyboxes()) {
                 Logger.d("intercept pre  $target uid=$callingUid pid=$callingPid dataSz=${data.dataSize()}")
-                try {
+                kotlin.runCatching {
                     data.enforceInterface(IKeystoreService.DESCRIPTOR)
-                    val descriptor = data.readTypedObject(KeyDescriptor.CREATOR) ?: return Skip
+                    val descriptor = data.readTypedObject(KeyDescriptor.CREATOR) ?: return@runCatching
                     if (PkgConfig.needGenerate(callingUid)) {
                         val response = SecurityLevelInterceptor.getKeyResponse(callingUid, descriptor.alias)
-                        if (response != null) {
-                            Logger.i("Found generated response for uid=$callingUid alias=${descriptor.alias}")
-                            return createTypedObjectReply(response)
-                        } else {
-                            Logger.e("No generated response found for uid=$callingUid alias=${descriptor.alias}")
-                            val nullParcel = Parcel.obtain()
-                            nullParcel.writeTypedObject(null as KeyEntryResponse?, 0)
-                            return OverrideReply(0, nullParcel)
-                        }
+                            ?: return@runCatching
+                        Logger.i("Generate key for uid=$callingUid alias=${descriptor.alias}")
+                        return createTypedObjectReply(response)
                     } else if (PkgConfig.needHack(callingUid)) {
                         if (SecurityLevelInterceptor.shouldSkipLeafHack(callingUid, descriptor.alias)) {
                             Logger.i("skip leaf hack for uid=$callingUid alias=${descriptor.alias}")
@@ -100,9 +94,7 @@ object Keystore2Interceptor : BaseKeystoreInterceptor() {
                                 return createTypedObjectReply(response)
                             } else {
                                 Logger.e("No generated response found for uid=$callingUid alias=${descriptor.alias}")
-                                val nullParcel = Parcel.obtain()
-                                nullParcel.writeTypedObject(null as KeyEntryResponse?, 0)
-                                return OverrideReply(0, nullParcel)
+                                return@runCatching
                             }
                         } else {
                             Logger.i("proceeding with leaf hack for uid=$callingUid alias=${descriptor.alias}")
@@ -110,11 +102,8 @@ object Keystore2Interceptor : BaseKeystoreInterceptor() {
                         }
                     }
                     return Skip
-                } catch (e: Exception) {
-                    Logger.e("Exception in onPreTransact uid=$callingUid pid=$callingPid!", e)
-                    return Skip
+                    }
                 }
-            }
         }
         return Skip
     }
